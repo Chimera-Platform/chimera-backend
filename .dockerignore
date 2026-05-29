@@ -5,3 +5,7 @@ vendor
 *.log
 tmp
 temp
+
+# Secrets — never bake into the image (provided via env vars at runtime)
+.env
+serviceAccountKey.json

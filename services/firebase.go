@@ -21,8 +21,20 @@ type FirebaseService struct {
 	bucket        string
 }
 
+// StorageEnabled reports whether Firebase Storage features are enabled.
+// Disabled by setting STORAGE_ENABLED=false (e.g. portfolio/demo deployments).
+func StorageEnabled() bool {
+	return os.Getenv("STORAGE_ENABLED") != "false"
+}
+
 func NewFirebaseService() *FirebaseService {
 	ctx := context.Background()
+
+	// Storage devre dışıysa hiç başlatma; nil client ile dön (upload'lar hata döndürür)
+	if !StorageEnabled() {
+		log.Printf("Firebase Storage is disabled (STORAGE_ENABLED=false)")
+		return &FirebaseService{storageClient: nil, bucket: ""}
+	}
 
 	// bulamazsa çöksün abi
 	bucketName := os.Getenv("FIREBASE_STORAGE_BUCKET")

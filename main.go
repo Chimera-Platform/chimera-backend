@@ -18,6 +18,13 @@ func main() {
 		log.Println("No .env file found, using environment variables")
 	}
 
+	// On hosts without a service account file (e.g. Railway), materialize the
+	// credentials from FIREBASE_SERVICE_ACCOUNT_JSON into a file and point the
+	// credential env vars at it. No-op locally when the file already exists.
+	if err := writeServiceAccountFromEnv(); err != nil {
+		log.Fatalf("Failed to write service account from env: %v", err)
+	}
+
 	// Initialize Firebase
 	if err := firebase.InitFirebase(); err != nil {
 		log.Fatalf("Failed to initialize Firebase: %v", err)
@@ -61,4 +68,25 @@ func main() {
 	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
+}
+
+// writeServiceAccountFromEnv writes the service account JSON provided via the
+// FIREBASE_SERVICE_ACCOUNT_JSON env var to a local file and points the
+// credential env vars (used by Auth/Firestore and Storage) at it. If the env
+// var is empty it does nothing, so local setups using a real file keep working.
+func writeServiceAccountFromEnv() error {
+	jsonContent := os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+	if jsonContent == "" {
+		return nil
+	}
+
+	const path = "serviceAccountKey.json"
+	if err := os.WriteFile(path, []byte(jsonContent), 0600); err != nil {
+		return err
+	}
+
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", path)
+	os.Setenv("FIREBASE_SERVICE_ACCOUNT_KEY", path)
+	log.Printf("Wrote service account credentials from FIREBASE_SERVICE_ACCOUNT_JSON to %s", path)
+	return nil
 }

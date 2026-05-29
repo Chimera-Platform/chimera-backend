@@ -128,6 +128,10 @@ func (c *ImageController) GenerateImage(ctx *gin.Context) {
 }
 
 func (c *ImageController) InpaintImage(ctx *gin.Context) {
+	if !services.StorageEnabled() {
+		ctx.JSON(http.StatusServiceUnavailable, gin.H{"error": "Image storage is disabled in this demo deployment"})
+		return
+	}
 	// Add recovery to prevent crashes
 	defer func() {
 		if r := recover(); r != nil {
@@ -283,6 +287,10 @@ func (c *ImageController) InpaintImage(ctx *gin.Context) {
 
 // SaveToGallery saves an image to the user's gallery
 func (c *ImageController) SaveToGallery(ctx *gin.Context) {
+	if !services.StorageEnabled() {
+		ctx.JSON(http.StatusServiceUnavailable, gin.H{"error": "Image storage is disabled in this demo deployment"})
+		return
+	}
 	var req models.SaveToGalleryRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, models.ImageResponse{
@@ -482,6 +490,10 @@ func (c *ImageController) getImagesFromStorage(userID string) ([]models.Image, e
 
 // StartInpaintJob starts an asynchronous inpainting job
 func (c *ImageController) StartInpaintJob(ctx *gin.Context) {
+	if !services.StorageEnabled() {
+		ctx.JSON(http.StatusServiceUnavailable, gin.H{"error": "Image storage is disabled in this demo deployment"})
+		return
+	}
 	// Add recovery to prevent crashes
 	defer func() {
 		if r := recover(); r != nil {
@@ -727,6 +739,10 @@ func (c *ImageController) DeleteImage(ctx *gin.Context) {
 
 // UploadImage uploads an image directly to the user's gallery
 func (c *ImageController) UploadImage(ctx *gin.Context) {
+	if !services.StorageEnabled() {
+		ctx.JSON(http.StatusServiceUnavailable, gin.H{"error": "Image storage is disabled in this demo deployment"})
+		return
+	}
 	var req models.UploadImageRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
